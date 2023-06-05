@@ -1,2 +1,2 @@
-# BogdaroneApp-server
-The server for the BogdaroneApp web-app
+# BogdaroneApp-web-api
+The server-side web api for the BogdaroneApp web-app
