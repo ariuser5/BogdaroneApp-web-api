@@ -1,57 +1,35 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Apis.Sheets.v4;
-using Google.Apis.Sheets.v4.Data;
-using Google.Apis.Services;
+﻿using BogdaroneApp.Domain.Models;
+using BogdaroneApp.QuickData;
+using BogdaroneApp.QuickData.Repositories;
 
-// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+const string AppName = "BogdaroneAppWebApi";
 
-const string credentialFilePath = "quick-data-credentials";
-const string spreadsheetId = "10qDdoWPP1QgYjzRsVgTn93E7_K4k-Q31lOq0HMq1xI8";
+var builder = WebApplication.CreateBuilder(args);
 
-SheetsService service = GetSheetsService("BogdaroneApp-web-api");
-string range = "Products!A1:D10"; // Specify the range you want to read from
+builder.Services.AddControllers();
+builder.Services.AddSingleton<GoogleDataConnection>(GoogleData.Connect(AppName));
+builder.Services.AddScoped<IDbContext>(serviceProvider => {
+    GoogleDataConnection connection = serviceProvider.GetRequiredService<GoogleDataConnection>();
+    return new GoogleDataContext(connection, serviceProvider);
+});
 
-try {
-    SpreadsheetsResource.ValuesResource.GetRequest request 
-        = service.Spreadsheets.Values.Get(spreadsheetId, range);
+builder.Services.AddRepository<Product, ProductRepository>();
+builder.Services.AddRepository<Image, ImageRepository>();
 
-    ValueRange response = request.Execute();
-    IList<IList<object>> values = response.Values;
-
-    if (values != null && values.Count > 0)
-    {
-        foreach (var row in values)
-        {
-            foreach (var cell in row)
-            {
-                Console.WriteLine(cell);
-            }
-        }
-    }
-} catch (Exception e) {
-    Console.WriteLine(e.Message);
-}
-
-
-//**************************
-// Helpers
-//**************************
-
-static SheetsService GetSheetsService(string applicationName)
-{
-    GoogleCredential credential;
-    using (var stream = new FileStream(credentialFilePath, FileMode.Open, FileAccess.Read))
-    {
-        credential = GoogleCredential.FromStream(stream)
-            .CreateScoped(SheetsService.Scope.Spreadsheets);
-    }
-
-    var service = new SheetsService(new BaseClientService.Initializer()
-    {
-        HttpClientInitializer = credential,
-        ApplicationName = applicationName,
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowLocalhost3000", builder => {
+        builder.WithOrigins("http://localhost:3000");
+        builder.AllowAnyMethod();
+        builder.AllowAnyHeader();
     });
+});
 
-    return service;
-}
+var app = builder.Build();
+
+app.UseCors("AllowLocalhost3000");
+app.MapGet("/Hello", () => "Hello, world!");
+app.MapControllers();
+
+app.Run();
+
+return;
