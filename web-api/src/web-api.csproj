@@ -37,7 +37,7 @@
 
   <ItemGroup>
     <!-- copy the quick-data-credentials file to the output directory -->
-    <None Update="QuickData\quick-data-credentials">
+    <None Update="quick-data-credentials">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <TargetPath>quick-data-credentials</TargetPath>
     </None>
